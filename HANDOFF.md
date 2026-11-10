@@ -15,31 +15,21 @@ Validate a PC-independent workflow: user -> ChatGPT -> GitHub Issue mentioning @
 - Single concurrent workflow per repo, timeout 20 minutes, checkout@v6, anthropics/claude-code-action@v1, model sonnet, max-turns 15.
 - GitHub Claude App was already installed. Screenshots showed original access 'all repositories'; user switched to selected sandbox only. Final saved setting has not been independently verified.
 
-## Not yet verified
-- Whether Claude GitHub App access has been restored to 'all repositories' (recommended to preserve existing Claude Code Web repo access).
-- CLAUDE_CODE_OAUTH_TOKEN was absent in repository Actions secrets as checked from PC03 on 2026-11-10; recheck after human registration.
-- Whether a subscription-generated token from 'claude setup-token' works with the installed action.
-- Workflow event and owner gate work, but Claude authentication has not succeeded.
-- Whether ChatGPT-created issues are attributed to the account and trigger workflow; commit attribution alone does not prove issue-event identity.
-- Whether PR creation succeeds. Test A was run and failed at missing Claude authentication; Test B has not been run.
+## Verified test results (2026-11-10)
+- Test A: Issue #1, created from PC03 GitHub CLI as oosaka0123-sudo (OWNER). Run 42815459799 failed on attempt 1 due to missing Claude credentials; attempt 2 succeeded after human registered CLAUDE_CODE_OAUTH_TOKEN.
+- Claude pushed branch `claude/issue-1-20261110-1235` and added `テスト成功` to README.md. ChatGPT created draft PR #3; Claude did not directly create a PR.
+- Test B: Issue #5 was created through ChatGPT's GitHub connector as oosaka0123-sudo (OWNER). Run 42817283462 succeeded.
+- Claude pushed branch `claude/issue-5-20261110-1237` and added `ChatGPT接続テスト成功` to README.md. ChatGPT created draft PR #6; Claude did not directly create a PR.
+- The official action obtained a GitHub App token and successfully authenticated Claude using the human-registered subscription token.
+- PR #2 records handoff; PR #4 proposes CLAUDE.md in a separate change. Review before merge. No production deploy or auto-merge was performed.
+- Standard operating choice: Claude commits and pushes a task branch, ChatGPT reviews the diff and creates a PR, then a human approves any merge.
 
-## Test A evidence (2026-11-10)
-- Issue #1: https://github.com/oosaka0123-sudo/claude-action-sandbox/issues/1
-- Created from PC03 using GitHub CLI authenticated as oosaka0123-sudo; issue author_association OWNER. This is NOT a ChatGPT-connector issue.
-- Actions run 42815459799: https://github.com/oosaka0123-sudo/claude-action-sandbox/actions/runs/42815459799
-- Event received, job ran (not skipped), checkout succeeded, GitHub App token obtained successfully.
-- Claude Code Action failed with `Environment variable validation failed`: neither ANTHROPIC_API_KEY nor CLAUDE_CODE_OAUTH_TOKEN nor federation credentials supplied.
-- No Claude implementation or PR was produced by this run. Do not report Test A as passed.
-- Re-run the same failed Actions run after the secret is registered; no new issue is necessary.
-- The GitHub App token being obtained does not prove access to other repositories.
-
-## Next steps
-1. Confirm GitHub Claude App repository access. Restore 'all repositories' if needed to avoid disrupting existing Claude integrations.
-2. HUMAN ONLY on PC03: run `claude setup-token`, complete browser authorization, copy token locally, then run `gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo oosaka0123-sudo/claude-action-sandbox` and paste it into the hidden prompt. No AI may read, capture, inspect, or save the token. Check only secret name via `gh secret list`.
-3. Test A: after secret registration, re-run Actions run 42815459799. Observe (1) workflow event, (2) non-skipped job, (3) successful Claude authentication, (4) created PR. Do not create a duplicate issue.
-4. If A succeeds, add CLAUDE.md in a separate PR, then Test B: ChatGPT GitHub connector creates an issue with @claude. Check actual issue author/sender, workflow event, job gate, auth and PR.
-5. Claude/bot comments may create skipped workflow runs. Those are expected, not failures.
-6. Human reviews PR before merge. No auto-merge or deploy. Sandbox only.
+## Remaining checks / next steps
+1. Verify GitHub Claude App installation access to other repositories separately; sandbox success does not prove it.
+2. Review and merge documentation PRs #2 and #4. Keep test PRs #3 and #6 unmerged and close them after recording evidence.
+3. Confirm the new CLAUDE.md rules are read in a subsequent task after merging.
+4. Before production rollout, test one small change on a separate low-risk site with a reviewed PR and no automatic deployment.
+5. Keep secrets in GitHub Actions Secrets; never expose tokens to an AI, issue, chat, logs, or repository.
 
 ## Risks / decisions
 - Do not assume subscription OAuth works until tested. Check official action docs and billing policy if authentication fails.
